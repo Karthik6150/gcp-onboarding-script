@@ -48,7 +48,4 @@ Ensures **least-privilege principle** while enabling deep security observability
 1. Open your [GCP Cloud Shell](https://shell.cloud.google.com)
 2. Directly run the script:
 
-```bash
-curl -O https://raw.githubusercontent.com/<your-org>/<your-repo>/main/gcp_onboard_cguard.sh
-chmod +x gcp_onboard_cguard.sh
-./gcp_onboard_cguard.sh
+bash <(curl -s https://raw.githubusercontent.com/Karthik6150/gcp-onboarding-script/main/gcp_onboard_cguard.sh)
