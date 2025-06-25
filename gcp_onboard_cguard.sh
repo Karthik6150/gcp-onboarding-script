@@ -2,18 +2,24 @@
 
 # CONFIG
 SERVICE_ACCOUNT_NAME="cguard-onboarding-service"
-PROJECT_ID="cguard-gcp" 
-ORG_ID="242366378115"  
-
-# SERVICE ACCOUNT EMAIL
+PROJECT_ID="cguard-gcp"
+ORG_ID="242366378115"
 SERVICE_ACCOUNT_EMAIL="$SERVICE_ACCOUNT_NAME@$PROJECT_ID.iam.gserviceaccount.com"
 
-echo "Creating service account: $SERVICE_ACCOUNT_NAME in project $PROJECT_ID..."
-gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
-  --project="$PROJECT_ID" \
-  --display-name="cGuard GCP Scanner"
+echo "Checking if service account exists..."
+EXISTING=$(gcloud iam service-accounts list --project="$PROJECT_ID" \
+  --filter="email:$SERVICE_ACCOUNT_EMAIL" --format="value(email)")
 
-# ORGANIZATION-LEVEL ROLES 
+if [[ "$EXISTING" == "$SERVICE_ACCOUNT_EMAIL" ]]; then
+  echo "Service account already exists: $SERVICE_ACCOUNT_EMAIL"
+else
+  echo "Creating service account: $SERVICE_ACCOUNT_NAME"
+  gcloud iam service-accounts create "$SERVICE_ACCOUNT_NAME" \
+    --project="$PROJECT_ID" \
+    --display-name="cGuard GCP Scanner"
+fi
+
+# ORGANIZATION-LEVEL ROLES
 ORG_ROLES=(
   roles/resourcemanager.organizationViewer
   roles/iam.organizationRoleViewer
@@ -21,13 +27,14 @@ ORG_ROLES=(
 
 echo "Assigning organization-level roles..."
 for ROLE in "${ORG_ROLES[@]}"; do
-  echo "Granting $ROLE to $SERVICE_ACCOUNT_EMAIL"
+  echo "Granting $ROLE at org level"
   gcloud organizations add-iam-policy-binding "$ORG_ID" \
     --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
-    --role="$ROLE"
+    --role="$ROLE" \
+    --condition=None
 done
 
-#PROJECT-LEVEL ROLES
+# PROJECT-LEVEL ROLES
 PROJECT_ROLES=(
   roles/viewer
   roles/cloudasset.viewer
@@ -44,12 +51,13 @@ PROJECT_IDS=$(gcloud projects list --filter="lifecycleState:ACTIVE" --format="va
 
 echo "Assigning project-level roles to $SERVICE_ACCOUNT_EMAIL..."
 for PID in $PROJECT_IDS; do
-  echo "Working on project: $PID"
+  echo "Project: $PID"
   for ROLE in "${PROJECT_ROLES[@]}"; do
-    echo "Granting $ROLE"
+    echo "  Granting $ROLE"
     gcloud projects add-iam-policy-binding "$PID" \
       --member="serviceAccount:$SERVICE_ACCOUNT_EMAIL" \
-      --role="$ROLE"
+      --role="$ROLE" \
+      --condition=None
   done
 done
 
