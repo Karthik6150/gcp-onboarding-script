@@ -1,4 +1,4 @@
-# 🔐 cGuard GCP Onboarding
+# CGuard GCP Onboarding
 
 This repository provides a secure and streamlined method for onboarding your GCP organization to **cGuard**, enabling deep cloud visibility and real-time security insights.
 
